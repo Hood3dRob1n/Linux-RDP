@@ -1,0 +1,5 @@
+RDP GUI CONNECT:
+rdesktop -u <username> -p <password> <IP:PORT>
+
+REMOTE COMMAND SHELL ONLY CONNECT:
+rdesktop -u <username> -p <password> -s cmd.exe <IP:PORT>

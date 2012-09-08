@@ -1,0 +1,825 @@
+Pre-requisite: GNU Parallel
+GNU Parallel utility for helping to streamline parallel processing in bash
+Homepage: http://www.gnu.org/software/parallel/
+
+DO NOT INSTALL parallel from the moreutils package, its is not the same (DONE DO THIS: sudo apt-get install moreutils)
+
+Instead download the parallel-<latest-copy>.tar.bz2 from: ftp://ftp.gnu.org/gnu/parallel/
+	Extract it to new folder (tar -jxvf parallel-<latest-copy>.tar.bz2)
+		cd parallel-<latest-copy>/
+			./configure && make
+			sudo make install
+
+NOTE: If you installed the wrong version this is your help menu you will see:
+USAGE: parallel -h
+	parallel [OPTIONS] command -- arguments
+		for each argument, run command with argument, in parallel
+	parallel [OPTIONS] -- commands
+		run specified commands in parallel
+
+If you installed the wrong one first and used the apt-get purge to remove. You might need to create a symlink after installing the new real parallel program (ln -s /usr/local/bin/parallel /usr/bin/parallel) or you might get errors about it not existing, blah blah....
+
+THIS IS THE RIGHT ONE:
+============================================================
+Usage:
+parallel [options] [command [arguments]] < list_of_arguments
+parallel [options] [command [arguments]] (::: arguments|:::: argfile(s))...
+cat ... | parallel --pipe [options] [command [arguments]]
+
+-j n           Run n jobs in parallel
+-k             Keep same order
+-X             Multiple arguments with context replace
+--colsep regexp      Split input on regexp for positional replacements
+{} {.} {/} {/.} {#}  Replacement strings
+{3} {3.} {3/} {3/.}  Positional replacement strings
+
+-S sshlogin    Example: foo@server.example.com
+--slf ..       Use ~/.parallel/sshloginfile as the list of sshlogins
+--trc {}.bar   Shorthand for --transfer --return {}.bar --cleanup
+--onall        Run the given command with argument on all sshlogins
+--nonall       Run the given command with no arguments on all sshlogins
+
+--pipe         Split stdin (standard input) to multiple jobs.
+--recend str   Record end separator for --pipe.
+--recstart str Record start separator for --pipe.
+
+See 'man parallel' for details
+
+When using GNU Parallel for a publication please cite:
+
+O. Tange (2011): GNU Parallel - The Command-Line Power Tool,
+;login: The USENIX Magazine, February 2011:42-47.
+=====================================================
+
+
+http://www.gnu.org/software/parallel/man.html#options
+OPTIONS
+
+command
+
+    Command to execute. If command or the following arguments contain replacement strings (such as {}) every instance will be substituted with the input.
+
+    If command is given, GNU parallel solve the same tasks as xargs. If command is not given GNU parallel will behave similar to cat | sh.
+
+    The command must be an executable, a script, a composed command, or a function. If it is a function you need to export -f the function first. An alias will, however, not work (see why http://www.perlmonks.org/index.pl?node_id=484296).
+{}
+
+    Input line. This replacement string will be replaced by a full line read from the input source. The input source is normally stdin (standard input), but can also be given with -a, :::, or ::::.
+
+    The replacement string {} can be changed with -I.
+
+    If the command line contains no replacement strings then {} will be appended to the command line.
+{.}
+
+    Input line without extension. This replacement string will be replaced by the input with the extension removed. If the input line contains . after the last / the last . till the end of the string will be removed and {.} will be replaced with the remaining. E.g. foo.jpg becomes foo, subdir/foo.jpg becomes subdir/foo, sub.dir/foo.jpg becomes sub.dir/foo, sub.dir/bar remains sub.dir/bar. If the input line does not contain . it will remain unchanged.
+
+    The replacement string {.} can be changed with --er.
+
+    To understand replacement strings see {}.
+{/}
+
+    Basename of input line. This replacement string will be replaced by the input with the directory part removed.
+
+    The replacement string {/} can be changed with --basenamereplace.
+
+    To understand replacement strings see {}.
+{//}
+
+    Dirname of input line. This replacement string will be replaced by the dir of the input line. See dirname(1).
+
+    The replacement string {//} can be changed with --dirnamereplace.
+
+    To understand replacement strings see {}.
+{/.}
+
+    Basename of input line without extension. This replacement string will be replaced by the input with the directory and extension part removed. It is a combination of {/} and {.}.
+
+    The replacement string {/.} can be changed with --basenameextensionreplace.
+
+    To understand replacement strings see {}.
+{#}
+
+    Sequence number of the job to run. This replacement string will be replaced by the sequence number of the job being run. It contains the same number as $PARALLEL_SEQ.
+
+    The replacement string {#} can be changed with --seqreplace.
+
+    To understand replacement strings see {}.
+{n}
+
+    Argument from input source n or the n'th argument. This positional replacement string will be replaced by the input from input source n (when used with -a or ::::) or with the n'th argument (when used with -N).
+
+    To understand replacement strings see {}.
+{n.}
+
+    Argument from input source n or the n'th argument without extension. It is a combination of {n} and {.}.
+
+    This positional replacement string will be replaced by the input from input source n (when used with -a or ::::) or with the n'th argument (when used with -N). The input will have the extension removed.
+
+    To understand positional replacement strings see {n}.
+{n/}
+
+    Basename of argument from input source n or the n'th argument. It is a combination of {n} and {/}.
+
+    This positional replacement string will be replaced by the input from input source n (when used with -a or ::::) or with the n'th argument (when used with -N). The input will have the directory (if any) removed.
+
+    To understand positional replacement strings see {n}.
+{n//}
+
+    Dirname of argument from input source n or the n'th argument. It is a combination of {n} and {//}.
+
+    This positional replacement string will be replaced by the dir of the input from input source n (when used with -a or ::::) or with the n'th argument (when used with -N). See dirname(1).
+
+    To understand positional replacement strings see {n}.
+{n/.}
+
+    Basename of argument from input source n or the n'th argument without extension. It is a combination of {n}, {/}, and {.}.
+
+    This positional replacement string will be replaced by the input from input source n (when used with -a or ::::) or with the n'th argument (when used with -N). The input will have the directory (if any) and extension removed.
+
+    To understand positional replacement strings see {n}.
+::: arguments
+
+    Use arguments from the command line as input source instead of stdin (standard input). Unlike other options for GNU parallel ::: is placed after the command and before the arguments.
+
+    The following are equivalent:
+
+      (echo file1; echo file2) | parallel gzip
+      parallel gzip ::: file1 file2
+      parallel gzip {} ::: file1 file2
+      parallel --arg-sep ,, gzip {} ,, file1 file2
+      parallel --arg-sep ,, gzip ,, file1 file2
+      parallel ::: "gzip file1" "gzip file2"
+
+    To avoid treating ::: as special use --arg-sep to set the argument separator to something else. See also --arg-sep.
+
+    stdin (standard input) will be passed to the first process run.
+
+    If multiple ::: are given, each group will be treated as an input source, and all combinations of input sources will be generated. E.g. ::: 1 2 ::: a b c will result in the combinations (1,a) (1,b) (1,c) (2,a) (2,b) (2,c). This is useful for replacing nested for-loops.
+
+    ::: and :::: can be mixed. So these are equivalent:
+
+      parallel echo {1} {2} {3} ::: 6 7 ::: 4 5 ::: 1 2 3
+      parallel echo {1} {2} {3} :::: <(seq 6 7) <(seq 4 5) :::: <(seq 1 3)
+      parallel -a <(seq 6 7) echo {1} {2} {3} :::: <(seq 4 5) :::: <(seq 1 3)
+      parallel -a <(seq 6 7) -a <(seq 4 5) echo {1} {2} {3} ::: 1 2 3
+      seq 6 7 | parallel -a - -a <(seq 4 5) echo {1} {2} {3} ::: 1 2 3
+      seq 4 5 | parallel echo {1} {2} {3} :::: <(seq 6 7) - ::: 1 2 3
+
+:::: argfiles
+
+    Another way to write -a argfile1 -a argfile2 ...
+
+    ::: and :::: can be mixed.
+
+    See -a, ::: and --xapply.
+--null
+-0
+
+    Use NUL as delimiter. Normally input lines will end in \n (newline). If they end in \0 (NUL), then use this option. It is useful for processing arguments that may contain \n (newline).
+--arg-file input-file
+-a input-file
+
+    Use input-file as input source. If you use this option, stdin (standard input) is given to the first process run. Otherwise, stdin (standard input) is redirected from /dev/null.
+
+    If multiple -a are given, each input-file will be treated as an input source, and all combinations of input sources will be generated. E.g. The file foo contains 1 2, the file bar contains a b c. -a foo -a bar will result in the combinations (1,a) (1,b) (1,c) (2,a) (2,b) (2,c). This is useful for replacing nested for-loops.
+
+    See also --xapply and {n}.
+--arg-file-sep sep-str
+
+    Use sep-str instead of :::: as separator string between command and argument files. Useful if :::: is used for something else by the command.
+
+    See also: ::::.
+--arg-sep sep-str
+
+    Use sep-str instead of ::: as separator string. Useful if ::: is used for something else by the command.
+
+    Also useful if you command uses ::: but you still want to read arguments from stdin (standard input): Simply change --arg-sep to a string that is not in the command line.
+
+    See also: :::.
+--basefile file
+--bf file
+
+    file will be transferred to each sshlogin before a jobs is started. It will be removed if --cleanup is active. The file may be a script to run or some common base data needed for the jobs. Multiple --bf can be specified to transfer more basefiles. The file will be transferred the same way as --transfer.
+--basenamereplace replace-str
+--bnr replace-str
+
+    Use the replacement string replace-str instead of {/} for basename of input line.
+--basenameextensionreplace replace-str
+--bner replace-str
+
+    Use the replacement string replace-str instead of {/.} for basename of input line without extension.
+--bg
+
+    Run command in background thus GNU parallel will not wait for completion of the command before exiting. This is the default if --semaphore is set.
+
+    See also: --fg, man sem
+
+    Implies --semaphore.
+--bibtex
+
+    Print the BibTeX entry for GNU parallel.
+--block size
+--block-size size
+
+    Size of block in bytes. The size can be postfixed with K, M, G, T, P, k, m, g, t, or p which would multiply the size with 1024, 1048576, 1073741824, 1099511627776, 1125899906842624, 1000, 1000000, 1000000000, 1000000000000, or 1000000000000000 respectively.
+
+    GNU parallel tries to meet the block size but can be off by the length of one record.
+
+    size defaults to 1M.
+
+    See --pipe for use of this.
+--cleanup
+
+    Remove transferred files. --cleanup will remove the transferred files on the remote computer after processing is done.
+
+      find log -name '*gz' | parallel \
+        --sshlogin server.example.com --transfer --return {.}.bz2 \
+        --cleanup "zcat {} | bzip -9 >{.}.bz2"
+
+    With --transfer the file transferred to the remote computer will be removed on the remote computer. Directories created will not be removed - even if they are empty.
+
+    With --return the file transferred from the remote computer will be removed on the remote computer. Directories created will not be removed - even if they are empty.
+
+    --cleanup is ignored when not used with --transfer or --return.
+--colsep regexp
+-C regexp
+
+    Column separator. The input will be treated as a table with regexp separating the columns. The n'th column can be access using {n} or {n.}. E.g. {3} is the 3rd column.
+
+    --colsep implies --trim rl.
+
+    regexp is a Perl Regular Expression: http://perldoc.perl.org/perlre.html
+--delimiter delim
+-d delim
+
+    Input items are terminated by the specified character. Quotes and backslash are not special; every character in the input is taken literally. Disables the end-of-file string, which is treated like any other argument. This can be used when the input consists of simply newline-separated items, although it is almost always better to design your program to use --null where this is possible. The specified delimiter may be a single character, a C-style character escape such as \n, or an octal or hexadecimal escape code. Octal and hexadecimal escape codes are understood as for the printf command. Multibyte characters are not supported.
+--dirnamereplace replace-str
+--dnr replace-str
+
+    Use the replacement string replace-str instead of {//} for dirname of input line.
+-E eof-str
+
+    Set the end of file string to eof-str. If the end of file string occurs as a line of input, the rest of the input is ignored. If neither -E nor -e is used, no end of file string is used.
+--dry-run
+
+    Print the job to run on stdout (standard output), but do not run the job. Use -v -v to include the ssh/rsync wrapping if the job would be run on a remote computer. Do not count on this literaly, though, as the job may be scheduled on another computer or the local computer if : is in the list.
+--eof[=eof-str]
+-e[eof-str]
+
+    This option is a synonym for the -E option. Use -E instead, because it is POSIX compliant for xargs while this option is not. If eof-str is omitted, there is no end of file string. If neither -E nor -e is used, no end of file string is used.
+--eta
+
+    Show the estimated number of seconds before finishing. This forces GNU parallel to read all jobs before starting to find the number of jobs. GNU parallel normally only reads the next job to run. Implies --progress.
+--fg
+
+    Run command in foreground thus GNU parallel will wait for completion of the command before exiting.
+
+    See also: --bg, man sem
+
+    Implies --semaphore.
+--filter-hosts (beta testing)
+
+    Remove down hosts. For each remote host: check that login through ssh works. If not: do not use this host.
+
+    Currently you can <i>not</i> put --filter-hosts in a profile, $PARALLEL, /etc/parallel/config or similar. This is because GNU parallel uses GNU parallel to compute this, so you will get an infinite loop. This will likely be fixed in a later release.
+--gnu
+
+    Behave like GNU parallel. If --tollef and --gnu are both set, --gnu takes precedence.
+--group
+
+    Group output. Output from each jobs is grouped together and is only printed when the command is finished. stderr (standard error) first followed by stdout (standard output). This takes some CPU time. In rare situations GNU parallel takes up lots of CPU time and if it is acceptable that the outputs from different commands are mixed together, then disabling grouping with -u can speedup GNU parallel by a factor of 10.
+
+    --group is the default. Can be reversed with -u.
+--help
+-h
+
+    Print a summary of the options to GNU parallel and exit.
+--halt-on-error <0|1|2>
+--halt <0|1|2>
+
+        Do not halt if a job fails. Exit status will be the number of jobs failed. This is the default.
+
+        Do not start new jobs if a job fails, but complete the running jobs including cleanup. The exit status will be the exit status from the last failing job.
+
+        Kill off all jobs immediately and exit without cleanup. The exit status will be the exit status from the failing job.
+
+--header regexp
+
+    Use upto regexp as header. For normal usage the matched header (typically the first line: --header '\n') will be split using --colsep (which will default to '\t') and column names can be used as replacement variables: {column name}. For --pipe the matched header will be prepended to each output.
+
+    --header : is an alias for --header '\n'.
+-I replace-str
+
+    Use the replacement string replace-str instead of {}.
+--replace[=replace-str]
+-i[replace-str]
+
+    This option is a synonym for -Ireplace-str if replace-str is specified, and for -I{} otherwise. This option is deprecated; use -I instead.
+--joblog logfile (beta testing)
+
+    Logfile for executed jobs. Save a list of the executed jobs to logfile in the following TAB separated format: sequence number, sshlogin, start time as seconds since epoch, run time in seconds, bytes in files transferred, bytes in files returned, exit status, and command run.
+
+    To convert the times into ISO-8601 strict do:
+
+    perl -a -F"\t" -ne 'chomp($F[2]=`date -d \@$F[2] +%FT%T`); print join("\t",@F)'
+
+    See also --resume.
+--jobs N
+-j N
+--max-procs N
+-P N
+
+    Number of jobslots. Run up to N jobs in parallel. 0 means as many as possible. Default is 100% which will run one job per CPU core.
+
+    If --semaphore is set default is 1 thus making a mutex.
+--jobs +N
+-j +N
+--max-procs +N
+-P +N
+
+    Add N to the number of CPU cores. Run this many jobs in parallel. See also --use-cpus-instead-of-cores.
+--jobs -N
+-j -N
+--max-procs -N
+-P -N
+
+    Subtract N from the number of CPU cores. Run this many jobs in parallel. If the evaluated number is less than 1 then 1 will be used. See also --use-cpus-instead-of-cores.
+--jobs N%
+-j N%
+--max-procs N%
+-P N%
+
+    Multiply N% with the number of CPU cores. Run this many jobs in parallel. If the evaluated number is less than 1 then 1 will be used. See also --use-cpus-instead-of-cores.
+--jobs procfile
+-j procfile
+--max-procs procfile
+-P procfile
+
+    Read parameter from file. Use the content of procfile as parameter for -j. E.g. procfile could contain the string 100% or +2 or 10. If procfile is changed when a job completes, procfile is read again and the new number of jobs is computed. If the number is lower than before, running jobs will be allowed to finish but new jobs will not be started until the wanted number of jobs has been reached. This makes it possible to change the number of simultaneous running jobs while GNU parallel is running.
+--keep-order
+-k
+
+    Keep sequence of output same as the order of input. Normally the output of a job will be printed as soon as the job completes. Try this to see the difference:
+
+      parallel -j4 sleep {}\; echo {} ::: 2 1 4 3
+      parallel -j4 -k sleep {}\; echo {} ::: 2 1 4 3
+
+-L max-lines (beta testing)
+
+    When used with --pipe: Read records of max-lines.
+
+    When used otherwise: Use at most max-lines nonblank input lines per command line. Trailing blanks cause an input line to be logically continued on the next input line.
+
+    -L 0 means read one line, but insert 0 arguments on the command line.
+
+    Implies -X unless -m, --xargs, or --pipe is set.
+--max-lines[=max-lines]
+-l[max-lines]
+
+    When used with --pipe: Read records of max-lines.
+
+    When used otherwise: Synonym for the -L option. Unlike -L, the max-lines argument is optional. If max-lines is not specified, it defaults to one. The -l option is deprecated since the POSIX standard specifies -L instead.
+
+    -l 0 is an alias for -l 1.
+
+    Implies -X unless -m, --xargs, or --pipe is set.
+--load max-load (beta testing)
+
+    Do not start new jobs on a given computer unless the load is less than max-load. max-load uses the same syntax as --jobs, so 100% for one per CPU is a valid setting. Only difference is 0 which is interpreted as 0.01.
+
+    The load average is only sampled every 10 seconds using uptime to avoid stressing small computers. Only the first (1 minute) load is used.
+--controlmaster (experimental)
+-M (experimental)
+
+    Use ssh's ControlMaster to make ssh connections faster. Useful if jobs run remote and are very fast to run. This is disabled for sshlogins that specify their own ssh command.
+--xargs
+
+    Multiple arguments. Insert as many arguments as the command line length permits.
+
+    If {} is not used the arguments will be appended to the line. If {} is used multiple times each {} will be replaced with all the arguments.
+
+    Support for --xargs with --sshlogin is limited and may fail.
+
+    See also -X for context replace. If in doubt use -X as that will most likely do what is needed.
+-m
+
+    Multiple arguments. Insert as many arguments as the command line length permits. If multiple jobs are being run in parallel: distribute the arguments evenly among the jobs. Use -j1 to avoid this.
+
+    If {} is not used the arguments will be appended to the line. If {} is used multiple times each {} will be replaced with all the arguments.
+
+    Support for -m with --sshlogin is limited and may fail.
+
+    See also -X for context replace. If in doubt use -X as that will most likely do what is needed.
+--minversion version
+
+    Print the version GNU parallel and exit. If the current version of GNU parallel is less than version the exit code is 255. Otherwise it is 0.
+
+    This is useful for scripts that depend on features only available from a certain version of GNU parallel.
+--nonall
+
+    --onall with no arguments. Run the command on all computers given with --sshlogin but take no arguments. GNU parallel will log into --jobs number of computers in parallel and run the job on the computer. -j adjusts how many computers to log into in parallel.
+
+    This is useful for running the same command (e.g. uptime) on a list of servers.
+--onall
+
+    Run all the jobs on all computers given with --sshlogin. GNU parallel will log into --jobs number of computers in parallel and run one job at a time on the computer. The order of the jobs will not be changed, but some computers may finish before others. -j adjusts how many computers to log into in parallel.
+
+    When using --group the output will be grouped by each server, so all the output from one server will be grouped together.
+--output-as-files
+--outputasfiles
+--files
+
+    Instead of printing the output to stdout (standard output) the output of each job is saved in a file and the filename is then printed.
+--pipe (beta testing)
+--spreadstdin (beta testing)
+
+    Spread input to jobs on stdin (standard input). Read a block of data from stdin (standard input) and give one block of data as input to one job.
+
+    The block size is determined by --block. The strings --recstart and --recend tell GNU parallel how a record starts and/or ends. The block read will have the final partial record removed before the block is passed on to the job. The partial record will be prepended to next block.
+
+    If --recstart is given this will be used to split at record start.
+
+    If --recend is given this will be used to split at record end.
+
+    If both --recstart and --recend are given both will have to match to find a split position.
+
+    If neither --recstart nor --recend are given --recend defaults to '\n'. To have no record separator use --recend "".
+
+    --files is often used with --pipe.
+--progress
+
+    Show progress of computations. List the computers involved in the task with number of CPU cores detected and the max number of jobs to run. After that show progress for each computer: number of running jobs, number of completed jobs, and percentage of all jobs done by this computer. The percentage will only be available after all jobs have been scheduled as GNU parallel only read the next job when ready to schedule it - this is to avoid wasting time and memory by reading everything at startup.
+
+    By sending GNU parallel SIGUSR2 you can toggle turning on/off --progress on a running GNU parallel process.
+
+    See also: --eta
+--max-args=max-args
+-n max-args
+
+    Use at most max-args arguments per command line. Fewer than max-args arguments will be used if the size (see the -s option) is exceeded, unless the -x option is given, in which case GNU parallel will exit.
+
+    -n 0 means read one argument, but insert 0 arguments on the command line.
+
+    Implies -X unless -m is set.
+--max-replace-args=max-args
+-N max-args
+
+    Use at most max-args arguments per command line. Like -n but also makes replacement strings {1} .. {max-args} that represents argument 1 .. max-args. If too few args the {n} will be empty.
+
+    -N 0 means read one argument, but insert 0 arguments on the command line.
+
+    This will set the owner of the homedir to the user:
+
+    tr ':' '\n' < /etc/passwd | parallel -N7 chown {1} {6}
+
+    Implies -X unless -m or --pipe is set.
+
+    When used with --pipe -N is the number of records to read. This is much slower than --block so avoid it if performance is important.
+--max-line-length-allowed
+
+    Print the maximal number of characters allowed on the command line and exit (used by GNU parallel itself to determine the line length on remote computers).
+--number-of-cpus
+
+    Print the number of physical CPUs and exit (used by GNU parallel itself to determine the number of physical CPUs on remote computers).
+--number-of-cores
+
+    Print the number of CPU cores and exit (used by GNU parallel itself to determine the number of CPU cores on remote computers).
+--nice niceness
+
+    Run the command at this niceness. For simple commands you can just add nice in front of the command. But if the command consists of more sub commands (Like: ls|wc) then prepending nice will not always work. --nice will make sure all sub commands are niced.
+--interactive
+-p
+
+    Prompt the user about whether to run each command line and read a line from the terminal. Only run the command line if the response starts with 'y' or 'Y'. Implies -t.
+--profile profilename
+-J profilename
+
+    Use profile profilename for options. This is useful if you want to have multiple profiles. You could have one profile for running jobs in parallel on the local computer and a different profile for running jobs on remote computers. See the section PROFILE FILES for examples.
+
+    profilename corresponds to the file ~/.parallel/profilename.
+
+    You can give multiple profiles by repeating --profile. If parts of the profiles conflict, the later ones will be used.
+
+    Default: config
+--quote
+-q
+
+    Quote command. This will quote the command line so special characters are not interpreted by the shell. See the section QUOTING. Most people will never need this. Quoting is disabled by default.
+--no-run-if-empty
+-r
+
+    If the stdin (standard input) only contains whitespace, do not run the command.
+
+    If used with --pipe this is slow.
+--recstart startstring
+--recend endstring
+
+    If --recstart is given startstring will be used to split at record start.
+
+    If --recend is given endstring will be used to split at record end.
+
+    If both --recstart and --recend are given the combined string endstringstartstring will have to match to find a split position. This is useful if either startstring or endstring match in the middle of a record.
+
+    If neither --recstart nor --recend are given then --recend defaults to '\n'. To have no record separator use --recend "".
+
+    --recstart and --recend are used with --pipe.
+
+    Use --regexp to interpret --recstart and --recend as regular expressions. This is slow, however.
+--regexp
+
+    Use --regexp to interpret --recstart and --recend as regular expressions. This is slow, however.
+--remove-rec-sep
+--removerecsep
+--rrs
+
+    Remove the text matched by --recstart and --recend before piping it to the command.
+
+    Only used with --pipe.
+--resume
+
+    Resumes from the last unfinished job. By reading --joblog GNU parallel will figure out the last unfinished job and continue from there. As GNU parallel only looks at the sequence numbers in --joblog then the input, the command, and --joblog all have to remain unchanged; otherwise GNU parallel may run wrong commands.
+
+    See also: --joblog.
+--retries n
+
+    If a job fails, retry it on another computer. Do this n times. If there are fewer than n computers in --sshlogin GNU parallel will re-use the computers. This is useful if some jobs fail for no apparent reason (such as network failure).
+--return filename
+
+    Transfer files from remote computers. --return is used with --sshlogin when the arguments are files on the remote computers. When processing is done the file filename will be transferred from the remote computer using rsync and will be put relative to the default login dir. E.g.
+
+      echo foo/bar.txt | parallel \
+        --sshlogin server.example.com --return {.}.out touch {.}.out
+
+    This will transfer the file $HOME/foo/bar.out from the computer server.example.com to the file foo/bar.out after running touch foo/bar.out on server.example.com.
+
+      echo /tmp/foo/bar.txt | parallel \
+        --sshlogin server.example.com --return {.}.out touch {.}.out
+
+    This will transfer the file /tmp/foo/bar.out from the computer server.example.com to the file /tmp/foo/bar.out after running touch /tmp/foo/bar.out on server.example.com.
+
+    Multiple files can be transferred by repeating the options multiple times:
+
+      echo /tmp/foo/bar.txt | \
+        parallel --sshlogin server.example.com \
+        --return {.}.out --return {.}.out2 touch {.}.out {.}.out2
+
+    --return is often used with --transfer and --cleanup.
+
+    --return is ignored when used with --sshlogin : or when not used with --sshlogin.
+--max-chars=max-chars
+-s max-chars
+
+    Use at most max-chars characters per command line, including the command and initial-arguments and the terminating nulls at the ends of the argument strings. The largest allowed value is system-dependent, and is calculated as the argument length limit for exec, less the size of your environment. The default value is the maximum.
+
+    Implies -X unless -m is set.
+--show-limits
+
+    Display the limits on the command-line length which are imposed by the operating system and the -s option. Pipe the input from /dev/null (and perhaps specify --no-run-if-empty) if you don't want GNU parallel to do anything.
+--semaphore
+
+    Work as a counting semaphore. --semaphore will cause GNU parallel to start command in the background. When the number of simultaneous jobs is reached, GNU parallel will wait for one of these to complete before starting another command.
+
+    --semaphore implies --bg unless --fg is specified.
+
+    --semaphore implies --semaphorename `tty` unless --semaphorename is specified.
+
+    Used with --fg, --wait, and --semaphorename.
+
+    The command sem is an alias for parallel --semaphore.
+
+    See also: man sem
+--semaphorename name
+--id name
+
+    Use name as the name of the semaphore. Default is the name of the controlling tty (output from tty).
+
+    The default normally works as expected when used interactively, but when used in a script name should be set. $$ or my_task_name are often a good value.
+
+    The semaphore is stored in ~/.parallel/semaphores/
+
+    Implies --semaphore.
+
+    See also: man sem
+--semaphoretimeout secs (not implemented)
+
+    If the semaphore is not released within secs seconds, take it anyway.
+
+    Implies --semaphore.
+
+    See also: man sem
+--seqreplace replace-str
+
+    Use the replacement string replace-str instead of {#} for job sequence number.
+--shellquote
+
+    Does not run the command but quotes it. Useful for making quoted composed commands for GNU parallel.
+--skip-first-line
+
+    Do not use the first line of input (used by GNU parallel itself when called with --shebang).
+-S [ncpu/]sshlogin[,[ncpu/]sshlogin[,...]]
+--sshlogin [ncpu/]sshlogin[,[ncpu/]sshlogin[,...]]
+
+    Distribute jobs to remote computers. The jobs will be run on a list of remote computers. GNU parallel will determine the number of CPU cores on the remote computers and run the number of jobs as specified by -j. If the number ncpu is given GNU parallel will use this number for number of CPU cores on the host. Normally ncpu will not be needed.
+
+    An sshlogin is of the form:
+
+      [sshcommand [options]][username@]hostname
+
+    The sshlogin must not require a password.
+
+    The sshlogin ':' is special, it means 'no ssh' and will therefore run on the local computer.
+
+    The sshlogin '..' is special, it read sshlogins from ~/.parallel/sshloginfile
+
+    The sshlogin '-' is special, too, it read sshlogins from stdin (standard input).
+
+    To specify more sshlogins separate the sshlogins by comma or repeat the options multiple times.
+
+    For examples: see --sshloginfile.
+
+    The remote host must have GNU parallel installed.
+
+    --sshlogin is known to cause problems with -m and -X.
+
+    --sshlogin is often used with --transfer, --return, --cleanup, and --trc.
+--sshloginfile filename
+--slf filename
+
+    File with sshlogins. The file consists of sshlogins on separate lines. Empty lines and lines starting with '#' are ignored. Example:
+
+      server.example.com
+      username@server2.example.com
+      8/my-8-core-server.example.com
+      2/my_other_username@my-dualcore.example.net
+      # This server has SSH running on port 2222
+      ssh -p 2222 server.example.net
+      4/ssh -p 2222 quadserver.example.net
+      # Use a different ssh program
+      myssh -p 2222 -l myusername hexacpu.example.net
+      # Use a different ssh program with default number of cores
+      //usr/local/bin/myssh -p 2222 -l myusername hexacpu.example.net
+      # Use a different ssh program with 6 cores
+      6//usr/local/bin/myssh -p 2222 -l myusername hexacpu.example.net
+      # Assume 16 cores on the local computer
+      16/:
+
+    When using a different ssh program the last argument must be the hostname.
+
+    Multiple --sshloginfile are allowed.
+
+    The sshloginfile '..' is special, it read sshlogins from ~/.parallel/sshloginfile
+
+    The sshloginfile '.' is special, it read sshlogins from /etc/parallel/sshloginfile
+
+    The sshloginfile '-' is special, too, it read sshlogins from stdin (standard input).
+--noswap
+
+    Do not start new jobs on a given computer if there is both swap-in and swap-out activity.
+
+    The swap activity is only sampled every 10 seconds as the sampling takes 1 second to do.
+
+    Swap activity is computed as (swap-in)*(swap-out) which in practice is a good value: swapping out is not a problem, swapping in is not a problem, but both swapping in and out usually indicates a problem.
+--silent
+
+    Silent. The job to be run will not be printed. This is the default. Can be reversed with -v.
+--tty
+
+    Open terminal tty. If GNU parallel is used for starting an interactive program then this option may be needed. It will start only one job at a time (i.e. -j1), not buffer the output (i.e. -u), and it will open a tty for the job. When the job is done, the next job will get the tty.
+--tag
+
+    Tag lines with arguments. Each output line will be prepended with the arguments and TAB (\t). When combined with --onall or --nonall the lines will be prepended with the sshlogin instead.
+
+    --tag is ignored when using -u.
+--tagstring str
+
+    Tag lines with a string. Each output line will be prepended with str and TAB (\t). str can contain replacement strings such as {}.
+
+    --tagstring is ignored when using -u, --onall, and --nonall.
+--tmpdir dirname
+
+    Directory for temporary files. GNU parallel normally buffers output into temporary files in /tmp. By setting --tmpdir you can use a different dir for the files. Setting --tmpdir is equivalent to setting $TMPDIR.
+--timeout sec (beta testing)
+
+    Time out for command. If the command runs for longer than sec seconds it will get killed with SIGTERM, followed by SIGTERM 200 ms later, followed by SIGKILL 200 ms later.
+--tollef (beta testing)
+
+    Make GNU parallel behave more like Tollef's parallel command. It activates -u, -q, and --arg-sep --. It also causes -l to change meaning to --load.
+
+    Not giving '--' is unsupported.
+
+    Do not use --tollef unless you know what you are doing.
+
+    To override use --gnu.
+--verbose
+-t
+
+    Print the job to be run on stderr (standard error).
+
+    See also -v and -p.
+--transfer
+
+    Transfer files to remote computers. --transfer is used with --sshlogin when the arguments are files and should be transferred to the remote computers. The files will be transferred using rsync and will be put relative to the default login dir. E.g.
+
+      echo foo/bar.txt | parallel \
+        --sshlogin server.example.com --transfer wc
+
+    This will transfer the file foo/bar.txt to the computer server.example.com to the file $HOME/foo/bar.txt before running wc foo/bar.txt on server.example.com.
+
+      echo /tmp/foo/bar.txt | parallel \
+        --sshlogin server.example.com --transfer wc
+
+    This will transfer the file foo/bar.txt to the computer server.example.com to the file /tmp/foo/bar.txt before running wc /tmp/foo/bar.txt on server.example.com.
+
+    --transfer is often used with --return and --cleanup.
+
+    --transfer is ignored when used with --sshlogin : or when not used with --sshlogin.
+--trc filename
+
+    Transfer, Return, Cleanup. Short hand for:
+
+    --transfer --return filename --cleanup
+--trim <n|l|r|lr|rl>
+
+    Trim white space in input.
+
+    n
+
+        No trim. Input is not modified. This is the default.
+    l
+
+        Left trim. Remove white space from start of input. E.g. " a bc " -> "a bc ".
+    r
+
+        Right trim. Remove white space from end of input. E.g. " a bc " -> " a bc".
+    lr
+    rl
+
+        Both trim. Remove white space from both start and end of input. E.g. " a bc " -> "a bc". This is the default if --colsep is used.
+
+--ungroup
+-u
+
+    Ungroup output. Output is printed as soon as possible and by passes GNU parallel internal processing. This may cause output from different commands to be mixed thus should only be used if you do not care about the output. Compare these:
+
+    parallel -j0 'sleep {};echo -n start{};sleep {};echo {}end' ::: 1 2 3 4
+
+    parallel -u -j0 'sleep {};echo -n start{};sleep {};echo {}end' ::: 1 2 3 4
+
+    It also disables --tag. GNU parallel runs faster with -u. Can be reversed with --group.
+--extensionreplace replace-str
+--er replace-str
+
+    Use the replacement string replace-str instead of {.} for input line without extension.
+--use-cpus-instead-of-cores
+
+    Count the number of physical CPUs instead of CPU cores. When computing how many jobs to run simultaneously relative to the number of CPU cores you can ask GNU parallel to instead look at the number of physical CPUs. This will make sense for computers that have hyperthreading as two jobs running on one CPU with hyperthreading will run slower than two jobs running on two physical CPUs. Some multi-core CPUs can run faster if only one thread is running per physical CPU. Most users will not need this option.
+-v
+
+    Verbose. Print the job to be run on stdout (standard output). Can be reversed with --silent. See also -t.
+
+    Use -v -v to print the wrapping ssh command when running remotely.
+--version
+-V
+
+    Print the version GNU parallel and exit.
+--workdir mydir
+--wd mydir
+
+    Files transferred using --transfer and --return will be relative to mydir on remote computers, and the command will be executed in the dir mydir.
+
+    The special mydir value ... will create working dirs under ~/.parallel/tmp/ on the remote computers. If --cleanup is given these dirs will be removed.
+
+    The special mydir value . uses the current working dir. If the current working dir is beneath your home dir, the value . is treated as the relative path to your home dir. This means that if your home dir is different on remote computers (e.g. if your login is different) the relative path will still be relative to your home dir.
+--wait
+
+    Wait for all commands to complete.
+
+    Implies --semaphore.
+
+    See also: man sem
+-X
+
+    Multiple arguments with context replace. Insert as many arguments as the command line length permits. If multiple jobs are being run in parallel: distribute the arguments evenly among the jobs. Use -j1 to avoid this.
+
+    If {} is not used the arguments will be appended to the line. If {} is used as part of a word (like pic{}.jpg) then the whole word will be repeated. If {} is used multiple times each {} will be replaced with the arguments.
+
+    Normally -X will do the right thing, whereas -m can give unexpected results if {} is used as part of a word.
+
+    Support for -X with --sshlogin is limited and may fail.
+
+    See also -m.
+--exit
+-x
+
+    Exit if the size (see the -s option) is exceeded.
+--xapply
+
+    Read multiple input sources like xapply. If multiple input sources are given, one argument will be read from each of the input sources. The arguments can be accessed in the command as {1} .. {n}, so {1} will be a line from the first input source, and {6} will refer to the line with the same line number from the 6th input source.
+
+    Compare these two:
+
+      parallel echo {1} {2} ::: 1 2 3 ::: a b c
+      parallel --xapply echo {1} {2} ::: 1 2 3 ::: a b c
+
+    See also --header.
+

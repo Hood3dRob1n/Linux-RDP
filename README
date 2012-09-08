@@ -1,0 +1,92 @@
+Hood3dRob1n's Linux RDP Scanner & Bruter Scripts
+
+This is a few scripts I put together to give Linux users a nice script for finding and bruteforcing RDP enabled servers. Windows seemed to have lots of options so thought I would help provide an alternative for my nix friends. Hope its helpful to someone somewhere....
+
+Video Demo can be seen here:
+http://www.youtube.com/watch?v=5VUc-9ICvzA
+
++--------------+
+| rdpsploit.sh |
++--------------+
+A simple bash wrapper script which performs scanning for open enabled RDP ports on Windows Servers using NMAP and then leverages Hydra to perform password attacks with all success being logged to results file. 
+
+USAGE: rdpsploit.sh <OPTION> <ARG>
+	-G
+		[*] Genrate IP Range lists based on Country
+	-F <#>
+		[*] NMAP Scan of <#> random hosts checking for Enabled RDP Port
+	-R <IP-RANGE>
+		[*] NMAP Scan of <IP-RANGE> checking for Enabled RDP Port 
+			[*] NMAP Formatted ranges accepted
+	-L </path/to/ip.lst>
+		[*] NMAP Scan using provided IP list (one per line) to check for Enabled RDP Port
+	-C
+		[*] Cracker Script with easy to follow prompts
+	-c
+		[*] Cracker Script with Username, IP and Password lists provided as arguments at run time
+		[*] Requires -I/i, -U/u, and -P/p flags (ORDER SPECIFIC => I=>U=>P):
+			-U <USERNAME>
+			-u </path/to/users.lst>
+			-P </path/to/password.lst>
+			-p <password>
+			-I </path/to/ip.lst>
+			-i <IP>
+
+EXAMPLES:
+	./rdpsploit.sh -G
+	./rdpsploit.sh -C
+	./rdpsploit.sh -F 1000
+	./rdpsploit.sh -R 192.168.0.0-192.168.3.255
+	./rdpsploit.sh -R 192.168.2.0/24
+	./rdpsploit.sh -L /home/hood3drob1n/Desktop/ip.lst
+	./rdpsploit.sh -c -I /path/to/ip.lst -U Administrator -P /path/to/password.lst
+	./rdpsploit.sh -c -I /path/to/ip.lst -u /path/to/users.lst -P /path/to/password.lst
+	./rdpsploit.sh -c -I /path/to/ip.lst -u /path/to/users.lst -p "P@ssw0rd1"
+	./rdpsploit.sh -c -i 192.168.2.51 -U Administrator -P /path/to/password.lst
+	./rdpsploit.sh -c -i 192.168.2.51 -u /path/to/users.lst -P /path/to/password.lst
+		***Options for '-c' option are order specific: I=>U=>P
+
+Pre-requisites:
+	NMAP
+	Hydra any version with RDP Support
+		***I wrote this script using the latest 7.3 for reference
+
+Benchmark for Scanning 10,000 Random IP (through VPN):
+	time ./rdpsploit.sh -F 10000
+		real	5m35.153s
+		user	0m2.976s
+		sys	0m1.584s
+
+Benchmark for Scanning 25,000 Random IP (through VPN):
+	time ./rdpsploit.sh -F 25000
+		real	14m17.123s
+		user	0m8.029s
+		sys	0m4.268s
+
+	***OPEN RDP FOUND: 15 on average per 10000 scanned....
+
+
++---------------+
+| rdp_ranger.sh |
++---------------+
+I also created the rdp_ranger.sh script which leverages the GNU Parallel tool to allow quicker scanning of large ranges since it allows a "threaded" approach to be used. Simply run the script to see the usage info, there are three main options to choose in how to run. You can choose the country to grab IP ranges for, in which case the IP ranges will be dumped to a file for repeated use later. You can also run in scan mode providing a IP Range file (with one NMAP formatted IP or IP range per line) which it will then scan for RDP Enabled servers. If you would like to continue you can use the bruteforce mode and try to bruteforce the enabled RDP servers. If you choose brute option it will use the default 'rdp_users.lst' and 'rdp_pass.lst' for bruting so swap this with your word list or edit the script if you want to use another list. All results are logged to files in their appropriate directories. It  shares the same results folders as the main script above to keep things easy to manage. Use it or dont, its up to you...
+
+NOTE: if you have confusion on GNU Parallel see the the other file in the stuff/ directory included within download package
+
++-------------+
+| splitter.sh |
++-------------+
+If you are going to be using LARGE IP Blocks like US, UK, AU for example you should probably break the IP Range file which is dumped into sections to help break it down as otherwise it might take a while to scan those huge ranges, but its entirely up to you. Threading is possible for 1-500 so if there are more than 500 lines of IP ranges for a given country you might want to break it down into chunks to scan in chunks using the splitter.sh script I provided in the splitter directory. Just run through those smaller IP blocks so you dont waste effort or loose results from scanning to long and having to close it down mid scan (which looses results).
+
+With splitter.sh just point at file, provide line count to cut at, and prefix
+	./splitter.sh <file2split> <Split-Size> <Prefix>
+	./splitter.sh ../range_lists/AUSTRALIA_IP_ranges.lst 500 AU
+
+Above will split AUSTRALIA_IP_ranges.lst into chunks with each being 500 lines each. Each of the 500 line output files will be named "AU_lnkfile-tmp_<NUM>" with NUM being as many as it takes to	split the full file. The output stays in the splitter folder so its easy to use as a temp folder and remove files when your done with them to keep a clean house. 
+
+Hope this helps a bit, there are many other methods you could use get these same jobs done. This was for a friendly challenge and the convenience of it all in a single or a few scripts.....
+
+Have fun & enjoy!
+H.R.
+
+PS - for auditing your own networks and for educational purposes only. I am in no way responsible for your actions or damages that arise through use of this or any of my tools/scripts/what have you.
